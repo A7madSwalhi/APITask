@@ -2,7 +2,91 @@
 
 require_once '../inc/stdbcon.php';
 
+function updateExam($inputData, $exampara)
+{
+    global $conn;
 
+    if (!isset($exampara['id'])) {
+        return erorr422('Student ID Not Found In URL');
+    } else {
+
+        $query = "SELECT * FROM exams WHERE examid =" . $exampara['id'];
+        $query_run = mysqli_query($conn, $query);
+
+
+        if ($query_run) {
+
+            if (mysqli_num_rows($query_run) > 0) {
+                $res = mysqli_fetch_assoc($query_run);
+                // return json_encode($res);
+
+
+                $subjectid  = isset($inputData['subjectid']) ? mysqli_real_escape_string($conn, $inputData['subjectid']) : $res['subjectid'];
+                $date = isset($inputData['date']) ?  mysqli_real_escape_string($conn, $inputData['date']) : $res['date'];
+                $maxscore = isset($inputData['maxscore']) ?  mysqli_real_escape_string($conn, $inputData['maxscore']) : $res['maxscore'];
+
+
+
+
+                $query = "UPDATE  exams SET subjectid = '$subjectid' , date='$date', maxscore = '$maxscore' WHERE examid=" . $exampara['id'];
+
+                $result = mysqli_query($conn, $query);
+
+                if ($result) {
+                    $data = [
+                        'status' => 201,
+                        'mesage' => 'Exam  Updated Successfuly ',
+                    ];
+                    header('HTTP/1.0 201 Updated');
+                    return json_encode($data);
+                } else {
+                    $data = [
+                        'status' => 405,
+                        'mesage' => 'Internal Server Error ',
+                    ];
+                    header('HTTP/1.0 500 Internal Server Error');
+                    return json_encode($data);
+                }
+            }
+        }
+    }
+}
+
+
+function createEnroll($customerInput)
+{
+
+    global $conn;
+
+    $student = mysqli_real_escape_string($conn, $customerInput['student']);
+    $subject = mysqli_real_escape_string($conn, $customerInput['subject']);
+
+
+    if (empty(trim($student))) {
+        return erorr422('Enter Your student');
+    } elseif (empty(trim($subject))) {
+        return erorr422('Enter Your subject');
+    } else {
+        $query = "INSERT INTO Enrollments (student, subject) VALUES ($student, $subject);";
+        $result = mysqli_query($conn, $query);
+
+        if ($result) {
+            $data = [
+                'status' => 201,
+                'mesage' => 'Enrollment created Successfuly ',
+            ];
+            header('HTTP/1.0 201 Created');
+            return json_encode($data);
+        } else {
+            $data = [
+                'status' => 405,
+                'mesage' => 'Internal Server Error ',
+            ];
+            header('HTTP/1.0 500 Internal Server Error');
+            return json_encode($data);
+        }
+    }
+}
 
 function erorr422($message)
 {
@@ -14,6 +98,7 @@ function erorr422($message)
     header('HTTP/1.0 422 Unprocessable Entity');
     echo json_encode($data);
 }
+
 
 function getExamsforSubj($id)
 {
@@ -65,6 +150,7 @@ function getExamsforSubj($id)
     }
 }
 
+
 function getExamsforStu($id)
 {
     global $conn;
@@ -115,6 +201,7 @@ function getExamsforStu($id)
     }
 }
 
+
 function getSudentforSubj($id)
 {
     global $conn;
@@ -163,6 +250,8 @@ function getSudentforSubj($id)
         echo json_encode($data);
     }
 }
+
+
 function getSbjects($id)
 {
     global $conn;
